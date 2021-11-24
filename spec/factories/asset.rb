@@ -4,22 +4,22 @@ FactoryBot.define do
 
     trait :with_internal_ip_address do
       primary_locator { "ip_address" }
-      ip_address_locator { "192.168.2.1" }
+      ip_address_locator { "192.168.2.#{Faker::Number.within(range: 1..256)}" } # Faker <3
     end
 
     trait :with_external_ip_address do
       primary_locator { "ip_address" }
-      ip_address_locator { "79.34.242.138" }
+      ip_address_locator { Faker::Internet.public_ip_v4_address } # Faker <3
     end
 
     trait :with_hostname do
       primary_locator { "hostname" }
-      hostname_locator { "com-2k8-32-87.patch.ad.vuln.qa.example.com" }
+      hostname_locator { Faker::Internet.domain_name } # Faker <3
     end
 
     trait :with_mac_address do
       primary_locator { "mac_address" }
-      mac_address_locator { "0a:b4:97:00:08:b3" }
+      mac_address_locator { Faker::Internet.mac_address } # Faker <3
     end
 
     trait :with_netbios do
