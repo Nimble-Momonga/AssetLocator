@@ -1,4 +1,5 @@
 require "factory_bot"
+require "faker"
 require "pry"
 require "standalone_migrations"
 

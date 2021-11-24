@@ -20,10 +20,43 @@ require_relative "models/asset"
 module AssetLocator
   def self.retrieve(locators)
     raise RuntimeError if locators == {}
-    # When given a hash of locators,
-    # this method should return a single asset.
-    #
-    # Place your logic here.
-    #
+
+    locators = prepare(locators)
+
+    sql = table.project(table[Arel.star])
+               .where(where_clause(locators))
+               .order(order_clause(locators))
+               .to_sql
+
+    asset = Asset.find_or_initialize_by(Asset.connection.exec_query(sql).first || { id: nil })
+    asset.assign_attributes(locators)
+
+    asset = (asset.new_record? || asset.invalid?) ? asset.dup : asset
+    asset.save
+    asset.reload
+  end
+
+  def self.prepare(locators)
+    Hash[locators.reject { |_k, v| v.blank? }
+                 .map do |k, v|
+                   key = k.match?(/_locator\z/) ? k : "#{k}_locator".to_sym
+                   value = Asset::ORDERED_LOCATORS[key].parse_value(v)
+                   [key, value]
+                 end]
+  end
+
+  def self.where_clause(locators)
+    locators.map { |k, v| table[k].eq(v) }
+            .reduce { |acc, x| acc.or(x) }
+  end
+
+  def self.order_clause(locators)
+    Asset::ORDERED_LOCATORS.map do |k, strat|
+      strat.sort_clause(k, locators)
+    end.compact
+  end
+
+  def self.table
+    Asset.arel_table
   end
 end
